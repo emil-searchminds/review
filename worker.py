@@ -67,7 +67,6 @@ async def main() -> None:
             record = {
                 "place_id": pid,
                 "company_name": company.get("name", ""),
-                "email": company.get("email", "") or company.get("email_1", ""),
                 "maps_url": f"https://www.google.com/maps/place/?q=place_id:{pid}",
                 **r,
             }

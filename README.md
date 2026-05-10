@@ -6,7 +6,7 @@ natural rotation, zero proxy setup.
 
 ## How it works
 
-1. You commit `companies.csv` (`name,email,place_id`).
+1. You commit `companies.csv` (`name,place_id`). Emails are kept locally in `companies-private.csv` (gitignored).
 2. You trigger the **Scrape** workflow with `worker_count = N`.
 3. GitHub fans out N parallel jobs. Each job scrapes a 1/N slice (`row_index % N == job_index`).
 4. Each job uploads its results as a workflow artifact.
@@ -38,7 +38,6 @@ Throughput ≈ `worker_count × workers_per_runner` places in flight.
 {
   "place_id": "ChIJ...",
   "company_name": "...",
-  "email": "...",
   "maps_url": "https://www.google.com/maps/place/?q=place_id:...",
   "rating": 4.6,
   "review_count": 132,
@@ -46,6 +45,12 @@ Throughput ≈ `worker_count × workers_per_runner` places in flight.
     {"reviewer_name": "...", "rating": 1, "text": "...", "date": "2 weeks ago", "date_weeks": 2}
   ]
 }
+```
+
+To re-attach emails locally after pulling the latest results:
+
+```bash
+python join_emails.py    # → results/results-with-emails.jsonl (gitignored)
 ```
 
 ## Local dev
