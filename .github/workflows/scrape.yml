@@ -52,7 +52,8 @@ jobs:
             --max-age-weeks ${{ inputs.max_age_weeks }} \
             --workers ${{ inputs.workers_per_runner }}
 
-      - uses: actions/upload-artifact@v4
+      - if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: chunk-${{ matrix.chunk_index }}
           path: results/chunk-*.jsonl
@@ -60,6 +61,7 @@ jobs:
 
   aggregate:
     needs: scrape
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

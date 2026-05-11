@@ -5,7 +5,10 @@ Run as:
     python worker.py --chunk-index 0 --chunk-count 10 --max-age-weeks 4
 
 Reads companies.csv, picks rows where (row_index % chunk_count == chunk_index),
-scrapes them via scraper.monitor_batch, and writes results/chunk-NN.jsonl.
+scrapes them via scraper.monitor_batch, and writes results/chunk-NNN.jsonl
+incrementally — each finished place is appended immediately, so a late crash
+(e.g. Chromium dying during browser.close at the end of the run) doesn't lose
+the whole batch.
 """
 
 import argparse
@@ -46,35 +49,59 @@ async def main() -> None:
 
     companies = load_slice(args.companies, args.chunk_index, args.chunk_count)
     place_ids = list(companies.keys())
-
-    print(f"chunk {args.chunk_index}/{args.chunk_count}: {len(place_ids)} places")
-
-    if not place_ids:
-        out_file = args.out_dir / f"chunk-{args.chunk_index:03d}.jsonl"
-        out_file.write_text("", encoding="utf-8")
-        return
-
-    results = await monitor_batch(
-        place_ids,
-        workers=args.workers,
-        max_age_weeks=args.max_age_weeks,
-    )
+    total = len(place_ids)
 
     out_file = args.out_dir / f"chunk-{args.chunk_index:03d}.jsonl"
-    with out_file.open("w", encoding="utf-8") as f:
-        for pid, r in results.items():
-            company = companies.get(pid, {})
-            record = {
-                "place_id": pid,
-                "company_name": company.get("name", ""),
-                "maps_url": f"https://www.google.com/maps/place/?q=place_id:{pid}",
-                **r,
-            }
-            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    out_file.write_text("", encoding="utf-8")  # truncate / create
 
-    alerts = sum(1 for r in results.values() if r.get("one_star_reviews"))
-    errors = sum(1 for r in results.values() if r.get("error"))
-    print(f"wrote {out_file}  |  alerts: {alerts}  errors: {errors}")
+    print(f"chunk {args.chunk_index}/{args.chunk_count}: {total} places")
+
+    if not place_ids:
+        return
+
+    write_lock = asyncio.Lock()
+    fh = out_file.open("a", encoding="utf-8")
+
+    counters = {"done": 0, "alerts": 0, "errors": 0}
+
+    async def on_result(pid: str, r: dict) -> None:
+        company = companies.get(pid, {})
+        record = {
+            "place_id": pid,
+            "company_name": company.get("name", ""),
+            "maps_url": f"https://www.google.com/maps/place/?q=place_id:{pid}",
+            **r,
+        }
+        async with write_lock:
+            fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+            fh.flush()
+        counters["done"] += 1
+        if r.get("one_star_reviews"):
+            counters["alerts"] += 1
+        if r.get("error"):
+            counters["errors"] += 1
+        if counters["done"] % 100 == 0 or counters["done"] == total:
+            print(
+                f"  {counters['done']}/{total}  "
+                f"alerts: {counters['alerts']}  errors: {counters['errors']}",
+                flush=True,
+            )
+
+    try:
+        await monitor_batch(
+            place_ids,
+            workers=args.workers,
+            max_age_weeks=args.max_age_weeks,
+            on_result=on_result,
+        )
+    finally:
+        fh.close()
+
+    print(
+        f"done: {counters['done']}/{total}  "
+        f"alerts: {counters['alerts']}  errors: {counters['errors']}  "
+        f"-> {out_file}"
+    )
 
 
 if __name__ == "__main__":

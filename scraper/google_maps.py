@@ -950,7 +950,10 @@ async def scrape_batch(
                     await ctx.close()
                 except Exception:
                     pass
-            await browser.close()
+            try:
+                await browser.close()
+            except Exception:
+                pass
 
     return results
 
@@ -1079,6 +1082,7 @@ async def monitor_batch(
     workers: int = 20,
     max_age_weeks: int = 4,
     progress_callback=None,
+    on_result=None,
 ) -> dict[str, dict]:
     """
     Batch version of get_recent_one_star_reviews.
@@ -1086,6 +1090,10 @@ async def monitor_batch(
     Uses the same browser/context pool pattern as scrape_batch.
     Returns dict mapping place_id -> result dict.
     Failed places get {"rating": 0.0, "review_count": 0, "one_star_reviews": [], "error": str}.
+
+    If `on_result` is supplied, it is awaited with (place_id, result_dict) as soon
+    as each place finishes — used by the worker to persist results incrementally
+    so that a late crash doesn't lose the whole batch.
     """
     results: dict = {}
     total = len(place_ids)
@@ -1129,6 +1137,11 @@ async def monitor_batch(
                     finally:
                         await ctx_queue.put(ctx)
                         completed += 1
+                        if on_result is not None:
+                            try:
+                                await on_result(place_id, results[place_id])
+                            except Exception:
+                                pass
                         if progress_callback is not None:
                             await progress_callback(completed, total)
 
@@ -1140,6 +1153,9 @@ async def monitor_batch(
                     await ctx.close()
                 except Exception:
                     pass
-            await browser.close()
+            try:
+                await browser.close()
+            except Exception:
+                pass
 
     return results
