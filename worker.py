@@ -28,6 +28,13 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--workers", type=int, default=10)
     p.add_argument("--companies", type=Path, default=Path("companies.csv"))
     p.add_argument("--out-dir", type=Path, default=Path("results"))
+    p.add_argument(
+        "--batch-label",
+        type=str,
+        default=None,
+        help="If set, skip place_ids that already have a non-error result in "
+             "results/batch-<label>.jsonl (re-run only failures).",
+    )
     return p.parse_args()
 
 
@@ -43,18 +50,45 @@ def load_slice(csv_path: Path, chunk_index: int, chunk_count: int) -> dict[str, 
     return companies
 
 
+def already_done(batch_label: str | None) -> set[str]:
+    """place_ids that have a successful (non-error) result in the existing batch file."""
+    if not batch_label:
+        return set()
+    batch_file = Path(f"results/batch-{batch_label}.jsonl")
+    if not batch_file.exists():
+        return set()
+    done: set[str] = set()
+    for line in batch_file.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            obj = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        pid = obj.get("place_id")
+        if pid and not obj.get("error"):
+            done.add(pid)
+    return done
+
+
 async def main() -> None:
     args = parse_args()
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
     companies = load_slice(args.companies, args.chunk_index, args.chunk_count)
-    place_ids = list(companies.keys())
+    done_pids = already_done(args.batch_label)
+    place_ids = [pid for pid in companies.keys() if pid not in done_pids]
     total = len(place_ids)
+    skipped = len(companies) - total
 
     out_file = args.out_dir / f"chunk-{args.chunk_index:03d}.jsonl"
     out_file.write_text("", encoding="utf-8")  # truncate / create
 
-    print(f"chunk {args.chunk_index}/{args.chunk_count}: {total} places")
+    print(
+        f"chunk {args.chunk_index}/{args.chunk_count}: "
+        f"{total} to scrape  (+{skipped} already done in batch-{args.batch_label})"
+    )
 
     if not place_ids:
         return

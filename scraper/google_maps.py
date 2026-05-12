@@ -1101,61 +1101,106 @@ async def monitor_batch(
     sem = asyncio.Semaphore(workers)
 
     async with async_playwright() as pw:
-        browser = await pw.chromium.launch(headless=True)
+        browser_state = {"browser": None}
+        browser_lock = asyncio.Lock()
+
+        async def ensure_browser():
+            """Return a connected browser; relaunch if the current one is dead.
+            Multiple workers may call this concurrently — the lock guarantees
+            at most one relaunch happens, others observe the freshly-launched one."""
+            async with browser_lock:
+                b = browser_state["browser"]
+                if b is not None:
+                    try:
+                        if b.is_connected():
+                            return b
+                    except Exception:
+                        pass
+                    try:
+                        await b.close()
+                    except Exception:
+                        pass
+                browser_state["browser"] = await pw.chromium.launch(headless=True)
+                return browser_state["browser"]
+
+        async def make_context():
+            b = await ensure_browser()
+            ctx = await b.new_context(
+                locale="en-US",
+                user_agent=_UA,
+                viewport={"width": 1280, "height": 900},
+            )
+            await ctx.add_cookies(_CONSENT_COOKIES_PW)
+            return ctx
+
         try:
             n_contexts = min(workers, total) if total > 0 else 1
-            contexts = []
-            for _ in range(n_contexts):
-                ctx = await browser.new_context(
-                    locale="en-US",
-                    user_agent=_UA,
-                    viewport={"width": 1280, "height": 900},
-                )
-                await ctx.add_cookies(_CONSENT_COOKIES_PW)
-                contexts.append(ctx)
-
             ctx_queue: asyncio.Queue = asyncio.Queue()
-            for ctx in contexts:
-                await ctx_queue.put(ctx)
+            for _ in range(n_contexts):
+                await ctx_queue.put(await make_context())
 
             async def _worker(place_id: str) -> None:
                 nonlocal completed
                 async with sem:
                     ctx = await ctx_queue.get()
-                    try:
-                        result = await get_recent_one_star_reviews(
-                            place_id, ctx, max_age_weeks
-                        )
-                        results[place_id] = result
-                    except Exception as exc:
-                        results[place_id] = {
-                            "rating": 0.0,
-                            "review_count": 0,
-                            "one_star_reviews": [],
-                            "error": str(exc),
-                        }
-                    finally:
-                        await ctx_queue.put(ctx)
-                        completed += 1
-                        if on_result is not None:
-                            try:
-                                await on_result(place_id, results[place_id])
-                            except Exception:
-                                pass
-                        if progress_callback is not None:
-                            await progress_callback(completed, total)
+                    result = None
+                    for attempt in range(2):
+                        try:
+                            result = await get_recent_one_star_reviews(
+                                place_id, ctx, max_age_weeks
+                            )
+                            break
+                        except Exception as exc:
+                            err_msg = str(exc)
+                            # "Connection closed" → context's underlying browser
+                            # died. Throw it away, get a fresh one (which will
+                            # also trigger a browser relaunch via ensure_browser
+                            # if needed), retry once.
+                            if attempt == 0 and "Connection closed" in err_msg:
+                                try:
+                                    await ctx.close()
+                                except Exception:
+                                    pass
+                                try:
+                                    ctx = await make_context()
+                                    continue
+                                except Exception:
+                                    pass
+                            result = {
+                                "rating": 0.0,
+                                "review_count": 0,
+                                "one_star_reviews": [],
+                                "error": err_msg,
+                            }
+                            break
+                    results[place_id] = result
+                    await ctx_queue.put(ctx)
+                    completed += 1
+                    if on_result is not None:
+                        try:
+                            await on_result(place_id, results[place_id])
+                        except Exception:
+                            pass
+                    if progress_callback is not None:
+                        await progress_callback(completed, total)
 
             await asyncio.gather(*[_worker(pid) for pid in place_ids])
 
         finally:
-            for ctx in contexts:
+            while not ctx_queue.empty():
                 try:
-                    await ctx.close()
+                    ctx = ctx_queue.get_nowait()
+                    try:
+                        await ctx.close()
+                    except Exception:
+                        pass
+                except Exception:
+                    break
+            b = browser_state["browser"]
+            if b is not None:
+                try:
+                    await b.close()
                 except Exception:
                     pass
-            try:
-                await browser.close()
-            except Exception:
-                pass
 
     return results

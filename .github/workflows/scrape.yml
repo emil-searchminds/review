@@ -54,7 +54,8 @@ jobs:
             --chunk-index ${{ matrix.chunk_index }} \
             --chunk-count ${{ inputs.worker_count }} \
             --max-age-weeks ${{ inputs.max_age_weeks }} \
-            --workers ${{ inputs.workers_per_runner }}
+            --workers ${{ inputs.workers_per_runner }} \
+            --batch-label ${{ inputs.batch_label }}
 
       - if: always()
         uses: actions/upload-artifact@v4
