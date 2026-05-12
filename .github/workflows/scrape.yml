@@ -3,6 +3,10 @@ name: Scrape
 on:
   workflow_dispatch:
     inputs:
+      batch_label:
+        description: "Result file: results/batch-<label>.jsonl"
+        type: string
+        required: true
       worker_count:
         description: "Number of parallel workers"
         type: number
@@ -77,16 +81,16 @@ jobs:
           path: results
           merge-multiple: true
 
-      - run: python aggregate.py
+      - run: python aggregate.py --out results/batch-${{ inputs.batch_label }}.jsonl
 
       - name: Commit results
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add results/results.jsonl
+          git add results/batch-${{ inputs.batch_label }}.jsonl
           if git diff --cached --quiet; then
             echo "no changes"
             exit 0
           fi
-          git commit -m "scrape: run ${{ github.run_id }}"
+          git commit -m "scrape: batch ${{ inputs.batch_label }} (run ${{ github.run_id }})"
           git push

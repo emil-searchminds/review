@@ -6,3 +6,4 @@ venv/
 results/chunk-*.jsonl
 companies-private.csv
 results/results-with-emails.jsonl
+batches/
