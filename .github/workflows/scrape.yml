@@ -70,6 +70,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: write
     steps:
       - uses: actions/checkout@v4
 
@@ -95,3 +96,20 @@ jobs:
           fi
           git commit -m "scrape: batch ${{ inputs.batch_label }} (run ${{ github.run_id }})"
           git push
+
+      - name: Trigger next batch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          current="${{ inputs.batch_label }}"
+          next=$(printf "%03d" $((10#$current + 1)))
+          if [ -f "batches-public/batch-${next}.csv" ]; then
+            echo "→ triggering batch ${next}"
+            gh workflow run scrape.yml \
+              -f batch_label="${next}" \
+              -f worker_count=${{ inputs.worker_count }} \
+              -f max_age_weeks=${{ inputs.max_age_weeks }} \
+              -f workers_per_runner=${{ inputs.workers_per_runner }}
+          else
+            echo "no batches-public/batch-${next}.csv — chain complete"
+          fi
