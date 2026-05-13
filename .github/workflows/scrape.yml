@@ -8,9 +8,9 @@ on:
         type: string
         required: true
       worker_count:
-        description: "Number of parallel workers"
+        description: "Number of parallel workers (will be floored to 40 to keep per-worker runtime short)"
         type: number
-        default: 10
+        default: 40
       max_age_weeks:
         description: "Only flag 1-star reviews newer than N weeks"
         type: number
@@ -19,17 +19,26 @@ on:
         description: "Concurrent browser contexts per runner"
         type: number
         default: 10
+      retry_count:
+        description: "How many times this batch has been auto-retried (internal use)"
+        type: number
+        default: 0
 
 jobs:
   prepare:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set.outputs.matrix }}
+      worker_count: ${{ steps.set.outputs.worker_count }}
     steps:
       - id: set
         run: |
           n=${{ inputs.worker_count }}
+          # Floor at 40: shorter per-worker runtime keeps the headless browser
+          # well below the ~2h death threshold we observed on the 2-core runners.
+          if [ "$n" -lt 40 ]; then n=40; fi
           echo "matrix=$(seq 0 $((n-1)) | jq -Rsc 'split("\n")[:-1] | map(tonumber)')" >> "$GITHUB_OUTPUT"
+          echo "worker_count=$n" >> "$GITHUB_OUTPUT"
 
   scrape:
     needs: prepare
@@ -52,7 +61,7 @@ jobs:
       - run: |
           python worker.py \
             --chunk-index ${{ matrix.chunk_index }} \
-            --chunk-count ${{ inputs.worker_count }} \
+            --chunk-count ${{ needs.prepare.outputs.worker_count }} \
             --max-age-weeks ${{ inputs.max_age_weeks }} \
             --workers ${{ inputs.workers_per_runner }} \
             --batch-label ${{ inputs.batch_label }}
@@ -71,6 +80,8 @@ jobs:
     permissions:
       contents: write
       actions: write
+    outputs:
+      err_pct: ${{ steps.stats.outputs.err_pct }}
     steps:
       - uses: actions/checkout@v4
 
@@ -85,6 +96,23 @@ jobs:
 
       - run: python aggregate.py --out results/batch-${{ inputs.batch_label }}.jsonl
 
+      - id: stats
+        name: Compute error rate
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          path = f"results/batch-${{ inputs.batch_label }}.jsonl"
+          total = errors = 0
+          for line in open(path, encoding="utf-8"):
+              line = line.strip()
+              if not line: continue
+              total += 1
+              if json.loads(line).get("error"): errors += 1
+          err_pct = (errors * 100 / total) if total else 0
+          print(f"err_pct={err_pct:.2f}")
+          print(f"  total={total}  errors={errors}  err_pct={err_pct:.2f}%", flush=True)
+          PY
+
       - name: Commit results
         run: |
           git config user.name  "github-actions[bot]"
@@ -94,22 +122,33 @@ jobs:
             echo "no changes"
             exit 0
           fi
-          git commit -m "scrape: batch ${{ inputs.batch_label }} (run ${{ github.run_id }})"
+          git commit -m "scrape: batch ${{ inputs.batch_label }} run ${{ github.run_id }} (errors: ${{ steps.stats.outputs.err_pct }}%)"
           git push
 
-      - name: Trigger next batch
+      - name: Trigger next batch (retry or advance)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           current="${{ inputs.batch_label }}"
-          next=$(printf "%03d" $((10#$current + 1)))
+          err_pct="${{ steps.stats.outputs.err_pct }}"
+          retry_count=${{ inputs.retry_count }}
+          # Retry same batch if errors > 5% and we've retried <2 times.
+          # Otherwise advance to the next batch.
+          if awk "BEGIN{exit !($err_pct > 5)}" && [ "$retry_count" -lt 2 ]; then
+            next="$current"
+            next_retry=$((retry_count + 1))
+            echo "→ retrying batch $current (attempt $next_retry, err_pct=$err_pct%)"
+          else
+            next=$(printf "%03d" $((10#$current + 1)))
+            next_retry=0
+            echo "→ advancing from $current to $next (err_pct=$err_pct%)"
+          fi
           if [ -f "batches-public/batch-${next}.csv" ]; then
-            echo "→ triggering batch ${next}"
             gh workflow run scrape.yml \
               -f batch_label="${next}" \
-              -f worker_count=${{ inputs.worker_count }} \
               -f max_age_weeks=${{ inputs.max_age_weeks }} \
-              -f workers_per_runner=${{ inputs.workers_per_runner }}
+              -f workers_per_runner=${{ inputs.workers_per_runner }} \
+              -f retry_count=${next_retry}
           else
             echo "no batches-public/batch-${next}.csv — chain complete"
           fi
