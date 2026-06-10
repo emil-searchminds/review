@@ -15,5 +15,10 @@
     "source": "(gbenglandbedfordshire...gb.csv",
     "places": 86304,
     "created_at": "2026-06-10T20:55:11"
+  },
+  "006": {
+    "source": "London.csv",
+    "places": 52634,
+    "created_at": "2026-06-10T21:01:41"
   }
 }
