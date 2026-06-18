@@ -51,5 +51,300 @@
     "places": 43512,
     "created_at": "2026-06-18T08:29:10",
     "name": ""
+  },
+  "013": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:02"
+  },
+  "014": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:02"
+  },
+  "015": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:02"
+  },
+  "016": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:02"
+  },
+  "017": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:02"
+  },
+  "018": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:03"
+  },
+  "019": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:03"
+  },
+  "020": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:03"
+  },
+  "021": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:03"
+  },
+  "022": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:03"
+  },
+  "023": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:04"
+  },
+  "024": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:04"
+  },
+  "025": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:04"
+  },
+  "026": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:04"
+  },
+  "027": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:04"
+  },
+  "028": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:05"
+  },
+  "029": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:05"
+  },
+  "030": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:05"
+  },
+  "031": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:05"
+  },
+  "032": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:05"
+  },
+  "033": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:06"
+  },
+  "034": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:06"
+  },
+  "035": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:06"
+  },
+  "036": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:06"
+  },
+  "037": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:06"
+  },
+  "038": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:07"
+  },
+  "039": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:07"
+  },
+  "040": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:07"
+  },
+  "041": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:07"
+  },
+  "042": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:07"
+  },
+  "043": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:08"
+  },
+  "044": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:08"
+  },
+  "045": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:08"
+  },
+  "046": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:08"
+  },
+  "047": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:08"
+  },
+  "048": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:09"
+  },
+  "049": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:09"
+  },
+  "050": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:09"
+  },
+  "051": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:09"
+  },
+  "052": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:09"
+  },
+  "053": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:10"
+  },
+  "054": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:10"
+  },
+  "055": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:10"
+  },
+  "056": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:10"
+  },
+  "057": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:10"
+  },
+  "058": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:10"
+  },
+  "059": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:11"
+  },
+  "060": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:11"
+  },
+  "061": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:11"
+  },
+  "062": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:11"
+  },
+  "063": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:11"
+  },
+  "064": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:11"
+  },
+  "065": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:12"
+  },
+  "066": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:12"
+  },
+  "067": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:12"
+  },
+  "068": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:12"
+  },
+  "069": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:12"
+  },
+  "070": {
+    "source": "spanien.csv",
+    "places": 90000,
+    "created_at": "2026-06-18T11:09:12"
+  },
+  "071": {
+    "source": "spanien.csv",
+    "places": 21694,
+    "created_at": "2026-06-18T11:09:12"
   }
 }
