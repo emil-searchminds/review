@@ -19,31 +19,43 @@
   "006": {
     "source": "London.csv",
     "places": 52634,
-    "created_at": "2026-06-10T21:01:41"
+    "created_at": "2026-06-10T21:01:41",
+    "name": ""
   },
   "007": {
     "source": "sverige.csv",
     "places": 33419,
-    "created_at": "2026-06-16T10:44:10"
+    "created_at": "2026-06-16T10:44:10",
+    "name": "sverige5"
   },
   "008": {
     "source": "sverige.csv",
     "places": 90000,
-    "created_at": "2026-06-16T10:44:29"
+    "created_at": "2026-06-16T10:44:29",
+    "name": "sverige4"
   },
   "009": {
     "source": "sverige.csv",
     "places": 90000,
-    "created_at": "2026-06-16T10:44:30"
+    "created_at": "2026-06-16T10:44:30",
+    "name": "sverige3"
   },
   "010": {
     "source": "sverige.csv",
     "places": 90000,
-    "created_at": "2026-06-16T10:44:30"
+    "created_at": "2026-06-16T10:44:30",
+    "name": "sverige2"
   },
   "011": {
     "source": "sverige.csv",
     "places": 13800,
-    "created_at": "2026-06-16T10:44:30"
+    "created_at": "2026-06-16T10:44:30",
+    "name": "sverige1"
+  },
+  "012": {
+    "source": "norge.csv",
+    "places": 43512,
+    "created_at": "2026-06-18T08:29:10",
+    "name": ""
   }
 }
