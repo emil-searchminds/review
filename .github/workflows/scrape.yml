@@ -123,7 +123,16 @@ jobs:
             exit 0
           fi
           git commit -m "scrape: batch ${{ inputs.batch_label }} run ${{ github.run_id }} (errors: ${{ steps.stats.outputs.err_pct }}%)"
-          git push
+          # Another run may push to the branch while we scrape — rebase + retry
+          # instead of dying on a non-fast-forward (a bare push here breaks the chain).
+          for attempt in 1 2 3 4 5; do
+            if git push; then echo "pushed (attempt $attempt)"; exit 0; fi
+            echo "push rejected (attempt $attempt) — fetch + rebase…"
+            git fetch origin ${{ github.ref_name }}
+            git rebase origin/${{ github.ref_name }} || { git rebase --abort; exit 1; }
+            sleep $((RANDOM % 5 + 2))
+          done
+          echo "push still failing after retries"; exit 1
 
       - name: Trigger next batch (retry or advance)
         env:
