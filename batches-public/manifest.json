@@ -341,5 +341,55 @@
     "source": "spanien.csv",
     "places": 21694,
     "created_at": "2026-06-18T11:09:12"
+  },
+  "072": {
+    "source": "uk.csv",
+    "places": 90000,
+    "created_at": "2026-07-03T19:46:57"
+  },
+  "073": {
+    "source": "uk.csv",
+    "places": 90000,
+    "created_at": "2026-07-03T19:46:58"
+  },
+  "074": {
+    "source": "uk.csv",
+    "places": 90000,
+    "created_at": "2026-07-03T19:46:58"
+  },
+  "075": {
+    "source": "uk.csv",
+    "places": 90000,
+    "created_at": "2026-07-03T19:46:58"
+  },
+  "076": {
+    "source": "uk.csv",
+    "places": 90000,
+    "created_at": "2026-07-03T19:46:58"
+  },
+  "077": {
+    "source": "uk.csv",
+    "places": 90000,
+    "created_at": "2026-07-03T19:46:58"
+  },
+  "078": {
+    "source": "uk.csv",
+    "places": 90000,
+    "created_at": "2026-07-03T19:46:59"
+  },
+  "079": {
+    "source": "uk.csv",
+    "places": 90000,
+    "created_at": "2026-07-03T19:46:59"
+  },
+  "080": {
+    "source": "uk.csv",
+    "places": 90000,
+    "created_at": "2026-07-03T19:46:59"
+  },
+  "081": {
+    "source": "uk.csv",
+    "places": 74577,
+    "created_at": "2026-07-03T19:46:59"
   }
 }
