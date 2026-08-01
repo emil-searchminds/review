@@ -43,6 +43,12 @@ jobs:
   scrape:
     needs: prepare
     runs-on: ubuntu-latest
+    # Healthy workers finish in 89-111 min; past ~2h the headless browser has
+    # died and the job just hangs. Without this it burns GitHub's 6h default
+    # before being reaped, stalling the whole chain that long. Failing here is
+    # safe: aggregate is `if: !cancelled()`, so it still commits the surviving
+    # chunks and triggers the next batch.
+    timeout-minutes: 150
     strategy:
       fail-fast: false
       matrix:
