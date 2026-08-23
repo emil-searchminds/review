@@ -1,16 +1,18 @@
 """
-Run locally in the morning.
+Run locally. Builds the file the original outreach.py mailer expects:
 
-Walks every results/batch-*.jsonl that the GitHub Actions chain has committed,
-filters to companies with recent 1-star reviews, joins emails from
-companies-private.csv, and writes:
+  data/results.jsonl   — JSONL, one company per line, with fields:
+                         place_id, company_name, email, maps_url,
+                         market, rating, review_count, one_star_reviews
 
-  outreach.csv                — one row per alert company (ready to mail merge)
-  outreach.jsonl              — same data but with full review text per row
+Only includes places that have BOTH a recent 1-star review AND an email
+on file (outreach.py filters on these anyway, so pre-filtering keeps the
+file lean).
 
-Both files are gitignored. The CSV includes:
-  name, email, place_id, rating, review_count, alerts, latest_review_age_weeks,
-  worst_review_text, maps_url
+Also writes outreach.csv for human review — same data, flat.
+
+Sorted by latest_review_age_weeks ascending, so when outreach.py picks
+the first N pending it contacts the freshest alerts first.
 """
 
 import csv
@@ -19,13 +21,13 @@ from pathlib import Path
 
 RESULTS_DIR = Path("results")
 PRIVATE_CSV = Path("companies-private.csv")
+OUT_JSONL = Path("data/results.jsonl")
 OUT_CSV = Path("outreach.csv")
-OUT_JSONL = Path("outreach.jsonl")
 
 
 def main() -> None:
     if not PRIVATE_CSV.exists():
-        raise SystemExit(f"missing {PRIVATE_CSV} (the emailed CSV, kept local only)")
+        raise SystemExit(f"missing {PRIVATE_CSV} (local-only emails file)")
 
     emails: dict[str, str] = {}
     with PRIVATE_CSV.open(encoding="utf-8") as f:
@@ -39,12 +41,13 @@ def main() -> None:
     if not batch_files:
         raise SystemExit("no results/batch-*.jsonl found — has any batch finished?")
 
-    alerts: list[dict] = []
+    OUT_JSONL.parent.mkdir(parents=True, exist_ok=True)
+
+    rows: list[dict] = []
     total_scraped = 0
-    batches_seen = []
+    alerts_total = 0
 
     for bf in batch_files:
-        batches_seen.append(bf.name)
         for line in bf.read_text(encoding="utf-8").splitlines():
             line = line.strip()
             if not line:
@@ -57,46 +60,55 @@ def main() -> None:
             reviews = obj.get("one_star_reviews") or []
             if not reviews:
                 continue
+            alerts_total += 1
             pid = obj.get("place_id", "")
             email = emails.get(pid, "")
             if not email:
-                continue  # no email = nothing to send
-            worst = min(reviews, key=lambda r: r.get("date_weeks", 999))
-            alerts.append({
-                "name": obj.get("company_name", ""),
-                "email": email,
+                continue
+            worst_age = min((r.get("date_weeks", 999) for r in reviews), default=999)
+            rows.append({
                 "place_id": pid,
+                "company_name": obj.get("company_name", ""),
+                "email": email,
+                "maps_url": obj.get("maps_url", ""),
+                "market": "",
                 "rating": obj.get("rating", 0),
                 "review_count": obj.get("review_count", 0),
-                "alerts": len(reviews),
-                "latest_review_age_weeks": worst.get("date_weeks", 0),
-                "worst_review_text": (worst.get("text") or "").replace("\n", " ").strip(),
-                "maps_url": obj.get("maps_url", ""),
-                "_reviews": reviews,
+                "one_star_reviews": reviews,
+                "_worst_age": worst_age,
             })
 
-    alerts.sort(key=lambda a: (a["latest_review_age_weeks"], -a["alerts"]))
-
-    with OUT_CSV.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow([
-            "name", "email", "place_id", "rating", "review_count",
-            "alerts", "latest_review_age_weeks", "worst_review_text", "maps_url",
-        ])
-        for a in alerts:
-            writer.writerow([
-                a["name"], a["email"], a["place_id"], a["rating"], a["review_count"],
-                a["alerts"], a["latest_review_age_weeks"], a["worst_review_text"], a["maps_url"],
-            ])
+    rows.sort(key=lambda r: (r["_worst_age"], -len(r["one_star_reviews"])))
 
     with OUT_JSONL.open("w", encoding="utf-8") as f:
-        for a in alerts:
-            f.write(json.dumps(a, ensure_ascii=False) + "\n")
+        for r in rows:
+            payload = {k: v for k, v in r.items() if not k.startswith("_")}
+            f.write(json.dumps(payload, ensure_ascii=False) + "\n")
 
-    print(f"Batches consolidated : {len(batches_seen)} ({', '.join(batches_seen)})")
-    print(f"Total places scraped : {total_scraped:,}")
-    print(f"Alert companies      : {len(alerts):,} (with email)")
-    print(f"Wrote                : {OUT_CSV} and {OUT_JSONL}")
+    with OUT_CSV.open("w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow([
+            "company_name", "email", "place_id", "rating", "review_count",
+            "alerts", "latest_review_age_weeks", "worst_review_text", "maps_url",
+        ])
+        for r in rows:
+            worst = min(r["one_star_reviews"], key=lambda x: x.get("date_weeks", 999))
+            w.writerow([
+                r["company_name"], r["email"], r["place_id"],
+                r["rating"], r["review_count"], len(r["one_star_reviews"]),
+                r["_worst_age"],
+                (worst.get("text") or "").replace("\n", " ").strip(),
+                r["maps_url"],
+            ])
+
+    print(f"Batches consolidated : {len(batch_files)} ({', '.join(b.stem for b in batch_files)})")
+    print(f"Total places scanned : {total_scraped:,}")
+    print(f"Alert companies      : {alerts_total:,}")
+    print(f"With email (output)  : {len(rows):,}")
+    print(f"Wrote                : {OUT_JSONL} and {OUT_CSV}")
+    print()
+    print("Drop data/results.jsonl into the original review_tracker repo "
+          "and run its outreach.py.")
 
 
 if __name__ == "__main__":
