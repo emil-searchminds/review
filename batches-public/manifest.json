@@ -243,5 +243,40 @@
     "source": "sverige.csv",
     "places": 13800,
     "created_at": "2026-09-02T08:43:10"
+  },
+  "317": {
+    "source": "new_zealand.csv",
+    "places": 90000,
+    "created_at": "2026-09-10T21:44:41"
+  },
+  "318": {
+    "source": "new_zealand.csv",
+    "places": 90000,
+    "created_at": "2026-09-10T21:44:42"
+  },
+  "319": {
+    "source": "new_zealand.csv",
+    "places": 90000,
+    "created_at": "2026-09-10T21:44:42"
+  },
+  "320": {
+    "source": "new_zealand.csv",
+    "places": 90000,
+    "created_at": "2026-09-10T21:44:42"
+  },
+  "321": {
+    "source": "new_zealand.csv",
+    "places": 90000,
+    "created_at": "2026-09-10T21:44:42"
+  },
+  "322": {
+    "source": "new_zealand.csv",
+    "places": 90000,
+    "created_at": "2026-09-10T21:44:42"
+  },
+  "323": {
+    "source": "new_zealand.csv",
+    "places": 4516,
+    "created_at": "2026-09-10T21:44:42"
   }
 }
